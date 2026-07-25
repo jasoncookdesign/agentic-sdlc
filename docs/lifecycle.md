@@ -46,6 +46,7 @@ Exit only when the suite is demonstrated to constrain cheap implementations.
 Build one dependency-ready module at a time.
 
 - The builder inherits contract tests and may not edit, skip, weaken, or replace them.
+- A runtime adapter may edit the project only when the invocation explicitly grants write access.
 - Each new unit test is observed failing before implementation.
 - Implementation is the minimum needed to pass.
 - Every module includes a production-entry-point test.
@@ -56,6 +57,7 @@ Build one dependency-ready module at a time.
 
 Review occurs in a context independent of the builder’s reasoning trace.
 
+- Run reviewer and security-reviewer roles without project write access.
 - Review contracts, behavior, tests, integration seams, error paths, and scope.
 - Run invariants against the assembled system.
 - Use `clear`, `clear-with-conditions`, or `block`.
@@ -76,3 +78,20 @@ Release approval is optional organizational policy. The lifecycle always require
 
 The runtime, process manager, hosting platform, and source-control workflow are local choices.
 
+## Executing roles
+
+The lifecycle is usable as a human process, through another orchestration system, or directly
+through the version 2 runtime adapters. Adapter execution combines the selected role contract with
+the task prompt and the configured project and artifact roots.
+
+```bash
+agentic-sdlc adapter check codex
+agentic-sdlc adapter run codex \
+  --project-root /path/to/project \
+  --role reviewer \
+  --prompt "Review the next module and return a recorded verdict." \
+  --json
+```
+
+Use `adapter render` to inspect the exact argument vector before execution. Builder and other
+write-capable roles require `--allow-write`; reviewer roles remain read-only.

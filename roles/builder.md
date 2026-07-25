@@ -11,3 +11,5 @@ Implement one dependency-ready module against inherited contracts.
 
 Report changed behavior, tests run, RED evidence, residual risks, and documentation updates.
 
+When invoked through a version 2 runtime adapter, this role requires explicit `--allow-write`.
+Rendering the command first is recommended when introducing a new runtime or project configuration.

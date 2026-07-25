@@ -6,6 +6,7 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from agentic_sdlc.cli import main
 
@@ -208,6 +209,68 @@ class CliTests(unittest.TestCase):
         )
         self.assertEqual(code, 2)
         self.assertIn("invalid transition", error)
+
+    def test_adapter_list_reports_v2_integrations(self) -> None:
+        code, output, _ = self.run_cli("adapter", "list", "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            set(json.loads(output)["adapters"]),
+            {"claude-code", "codex", "gemini", "local"},
+        )
+
+    def test_adapter_render_uses_project_configuration(self) -> None:
+        artifact_root = self.init_project()
+        config_path = artifact_root / "project.json"
+        config = json.loads(config_path.read_text())
+        config["adapters"]["providers"]["local"]["command"] = [
+            "my-agent", "--root", "{project_root}", "--prompt", "{prompt}"
+        ]
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        code, output, _ = self.run_cli(
+            "adapter", "render", "local",
+            "--project-root", str(self.root),
+            "--role", "reviewer",
+            "--prompt", "Review the module.",
+            "--json",
+        )
+        self.assertEqual(code, 0, output)
+        command = json.loads(output)["command"]
+        self.assertEqual(command[0], "my-agent")
+        self.assertIn(str(self.root.resolve()), command)
+
+    def test_adapter_render_requires_explicit_write_authorization(self) -> None:
+        self.init_project()
+        code, _, error = self.run_cli(
+            "adapter", "render", "codex",
+            "--project-root", str(self.root),
+            "--role", "builder",
+            "--prompt", "Build it.",
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("write authorization", error)
+
+    @patch("agentic_sdlc.cli.run_adapter")
+    def test_adapter_run_returns_normalized_result(self, run) -> None:
+        self.init_project()
+        run.return_value = {
+            "adapter": "codex",
+            "role": "reviewer",
+            "exit_code": 0,
+            "response": "clear",
+            "stdout": "",
+            "stderr": "",
+            "parse_error": None,
+            "command": ["codex"],
+        }
+        code, output, _ = self.run_cli(
+            "adapter", "run", "codex",
+            "--project-root", str(self.root),
+            "--role", "reviewer",
+            "--prompt", "Review it.",
+            "--json",
+        )
+        self.assertEqual(code, 0, output)
+        self.assertEqual(json.loads(output)["response"], "clear")
 
 
 def module_spec(

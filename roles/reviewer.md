@@ -15,3 +15,5 @@ Return exactly one verdict:
 State evidence, conditions, and the phase that introduced each defect. Do not repair the work being
 judged within the review context.
 
+Runtime adapters enforce read-only execution for this role. Adapter output is evidence to assess;
+record the accepted verdict separately with `agentic-sdlc record-review`.

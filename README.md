@@ -48,7 +48,9 @@ they do not change the lifecycle itself.
 - For agent-driven use, an LLM capable of following structured role instructions, reading project
   artifacts, editing code, and executing or requesting execution of tests.
 
-The CLI has no runtime package dependencies and does not require network access.
+The core CLI has no third-party Python dependencies and its artifact-management commands work
+offline. Hosted runtime adapters may require their vendor CLI, authentication, and network access;
+the local-command adapter does not impose those requirements.
 
 ## Quick start
 
@@ -80,9 +82,41 @@ agentic-sdlc init \
 | `record-review` | Append an independent review verdict without rewriting the module specification |
 | `add-module` | Create a module specification with portable frontmatter |
 | `set-status` | Advance a module through explicit, validated state transitions |
+| `adapter list` | List executable runtime adapters |
+| `adapter check` | Verify that a runtime is installed and report its version |
+| `adapter render` | Inspect the exact argument vector for an agent run |
+| `adapter run` | Execute a role through Claude Code, Codex, Gemini, or a local command |
 
 Exit codes are consistent: `0` success/pass, `1` valid context with findings/no ready work, and `2`
 invalid context or invocation.
+
+## Runtime adapters
+
+Version 2 can execute lifecycle roles through four adapters:
+
+```bash
+agentic-sdlc adapter list
+agentic-sdlc adapter check codex
+agentic-sdlc adapter render codex \
+  --project-root /path/to/project \
+  --role reviewer \
+  --prompt-file review-prompt.md \
+  --json
+agentic-sdlc adapter run codex \
+  --project-root /path/to/project \
+  --role reviewer \
+  --prompt-file review-prompt.md \
+  --json
+```
+
+Write-capable roles require `--allow-write`. Review roles are rendered with each runtime’s
+read-only mode. Commands are executed as argument arrays without a shell, and responses are
+normalized across providers. See [`adapters/`](adapters/) for installation, authentication,
+configuration, and safety guidance.
+
+The adapter layer supplies a runtime-neutral role contract, project and artifact locations, and the
+task prompt. It does not prescribe model selection, session management, source-control isolation,
+parallel scheduling, or how an organization approves work.
 
 ## Repository guide
 
@@ -92,8 +126,9 @@ invalid context or invocation.
 - [`runbooks/`](runbooks/) — operating procedures
 - [`src/agentic_sdlc/resources/templates/`](src/agentic_sdlc/resources/templates/) — canonical templates
 - [`docs/customization.md`](docs/customization.md) — paths, capabilities, policy hooks, and commands
-- [`adapters/`](adapters/) — documentation for connecting agent runtimes
+- [`adapters/`](adapters/) — executable runtime adapters and provider-specific operating guides
 - [`docs/deployment/`](docs/deployment/) — OS-neutral deployment principles and platform recipes
+- [`CHANGELOG.md`](CHANGELOG.md) — release history and upgrade notes
 
 ## Roles and capability profiles
 
@@ -112,8 +147,10 @@ environment.
 
 ## Project status
 
-Version 1 provides the complete generic CLI and documentation-only runtime adapters. Adapter
-automation can evolve independently without changing the lifecycle contract.
+Version 2 provides the generic lifecycle CLI plus executable Claude Code, Codex, Gemini, and
+local-command adapters. Projects initialized by version 1 remain valid; re-running `init` is not
+required. Add the optional `adapters` block described in
+[`docs/customization.md`](docs/customization.md) when model bindings or a local command are needed.
 
 ## License
 

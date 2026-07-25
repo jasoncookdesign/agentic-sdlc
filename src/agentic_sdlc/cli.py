@@ -8,6 +8,15 @@ from datetime import UTC, datetime
 from importlib.resources import files
 from pathlib import Path
 
+from .adapters import (
+    AdapterError,
+    AdapterRequest,
+    available_adapters,
+    build_command,
+    probe_adapter,
+    run_adapter,
+)
+
 DEFAULT_ARTIFACT_ROOT = ".sdlc"
 TEMPLATES = {
     "RECORD.md": "build-record.md",
@@ -17,6 +26,16 @@ TEMPLATES = {
 }
 VALID_STATUSES = {"planned", "ready", "building", "review", "blocked", "complete"}
 VALID_VERDICTS = {"clear", "clear-with-conditions", "block"}
+ADAPTER_ROLES = {
+    "engineering_agent",
+    "delivery_lead",
+    "requirements_interviewer",
+    "architect",
+    "contract_author",
+    "builder",
+    "reviewer",
+    "security_reviewer",
+}
 STATUS_TRANSITIONS = {
     "planned": {"ready", "blocked"},
     "ready": {"building", "blocked"},
@@ -85,7 +104,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     created = _now()
     config = {
-        "schema_version": 1,
+        "schema_version": 2,
         "project": {
             "name": args.name,
             "slug": args.slug or _slugify(args.name),
@@ -114,6 +133,18 @@ def cmd_init(args: argparse.Namespace) -> int:
             "release_approval": {"enabled": False, "role": "accountable_approver"},
         },
         "commands": {"test": None, "contract_test": None, "release_verify": None},
+        "adapters": {
+            "default": None,
+            "providers": {
+                "claude-code": {"model": None},
+                "codex": {"model": None},
+                "gemini": {"model": None},
+                "local": {
+                    "model": None,
+                    "command": [],
+                },
+            },
+        },
     }
     (artifact / "project.json").write_text(
         json.dumps(config, indent=2) + "\n", encoding="utf-8"
@@ -447,11 +478,135 @@ def cmd_set_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _adapter_provider_config(config: dict, adapter: str) -> dict:
+    adapters = config.get("adapters", {})
+    providers = adapters.get("providers", {}) if isinstance(adapters, dict) else {}
+    provider = providers.get(adapter, {}) if isinstance(providers, dict) else {}
+    return provider if isinstance(provider, dict) else {}
+
+
+def _adapter_prompt(args: argparse.Namespace) -> str:
+    if getattr(args, "prompt_file", None):
+        try:
+            return Path(args.prompt_file).expanduser().read_text(encoding="utf-8")
+        except OSError as exc:
+            raise AdapterError(f"cannot read prompt file: {exc}") from exc
+    prompt = getattr(args, "prompt", None)
+    if not prompt:
+        raise AdapterError("provide --prompt or --prompt-file")
+    return prompt
+
+
+def _adapter_request(
+    args: argparse.Namespace,
+    project: Path,
+    artifact: Path,
+    config: dict,
+) -> AdapterRequest:
+    provider = _adapter_provider_config(config, args.adapter)
+    local_command = provider.get("command") if args.adapter == "local" else None
+    return AdapterRequest(
+        adapter=args.adapter,
+        prompt=_adapter_prompt(args),
+        project_root=project,
+        role=args.role,
+        artifact_root=artifact,
+        model=args.model or provider.get("model"),
+        allow_write=args.allow_write,
+        local_command=local_command,
+    )
+
+
+def cmd_adapter_list(args: argparse.Namespace) -> int:
+    payload = {"adapters": available_adapters()}
+    if args.json:
+        print(json.dumps(payload, indent=2))
+    else:
+        for adapter in payload["adapters"]:
+            print(adapter)
+    return 0
+
+
+def cmd_adapter_check(args: argparse.Namespace) -> int:
+    _, artifact = _resolve(args.project_root, args.artifact_root)
+    local_command = None
+    if args.adapter == "local":
+        try:
+            config = _load_project(artifact)
+        except ContextError as exc:
+            return _context_error(exc, args.json)
+        local_command = _adapter_provider_config(config, "local").get("command")
+    try:
+        result = probe_adapter(
+            args.adapter,
+            local_command=local_command,
+            timeout_seconds=args.timeout,
+        )
+    except AdapterError as exc:
+        return _adapter_error(exc, args.json)
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        state = "available" if result["available"] else "unavailable"
+        print(f"{result['adapter']}: {state}")
+        if result["executable"]:
+            print(f"  executable: {result['executable']}")
+        if result["version"]:
+            print(f"  version: {result['version']}")
+        if result["error"]:
+            print(f"  error: {result['error']}")
+    return 0 if result["available"] else 1
+
+
+def cmd_adapter_render(args: argparse.Namespace) -> int:
+    project, artifact = _resolve(args.project_root, args.artifact_root)
+    try:
+        config = _load_project(artifact)
+        request = _adapter_request(args, project, artifact, config)
+        command = build_command(request)
+    except (ContextError, AdapterError) as exc:
+        return _adapter_error(exc, args.json)
+    payload = {"adapter": args.adapter, "role": args.role, "command": command}
+    if args.json:
+        print(json.dumps(payload, indent=2))
+    else:
+        print(json.dumps(command))
+    return 0
+
+
+def cmd_adapter_run(args: argparse.Namespace) -> int:
+    project, artifact = _resolve(args.project_root, args.artifact_root)
+    try:
+        config = _load_project(artifact)
+        request = _adapter_request(args, project, artifact, config)
+        result = run_adapter(request, timeout_seconds=args.timeout)
+    except (ContextError, AdapterError) as exc:
+        return _adapter_error(exc, args.json)
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        if result["response"]:
+            print(result["response"])
+        if result["stderr"]:
+            print(result["stderr"], file=sys.stderr, end="")
+        if result["parse_error"]:
+            print(f"OUTPUT ERROR: {result['parse_error']}", file=sys.stderr)
+    return 0 if result["exit_code"] == 0 and result["response"] is not None else 1
+
+
 def _context_error(exc: Exception, json_output: bool) -> int:
     if json_output:
         print(json.dumps({"ok": False, "error": str(exc), "exit": 2}))
     else:
         print(f"CONTEXT ERROR: {exc}", file=sys.stderr)
+    return 2
+
+
+def _adapter_error(exc: Exception, json_output: bool) -> int:
+    if json_output:
+        print(json.dumps({"ok": False, "error": str(exc), "exit": 2}))
+    else:
+        print(f"ADAPTER ERROR: {exc}", file=sys.stderr)
     return 2
 
 
@@ -509,6 +664,42 @@ def parser() -> argparse.ArgumentParser:
     set_status.add_argument("--module", required=True)
     set_status.add_argument("--status", required=True, choices=sorted(VALID_STATUSES))
     set_status.set_defaults(func=cmd_set_status)
+
+    adapter = sub.add_parser("adapter", help="inspect or run an agent runtime adapter")
+    adapter_sub = adapter.add_subparsers(dest="adapter_command", required=True)
+
+    adapter_list = adapter_sub.add_parser("list", help="list supported adapters")
+    adapter_list.add_argument("--json", action="store_true")
+    adapter_list.set_defaults(func=cmd_adapter_list)
+
+    adapter_check = adapter_sub.add_parser("check", help="check adapter availability")
+    paths(adapter_check)
+    adapter_check.add_argument("adapter", choices=available_adapters())
+    adapter_check.add_argument("--timeout", type=int, default=10)
+    adapter_check.add_argument("--json", action="store_true")
+    adapter_check.set_defaults(func=cmd_adapter_check)
+
+    def adapter_request_options(command: argparse.ArgumentParser) -> None:
+        paths(command)
+        command.add_argument("adapter", choices=available_adapters())
+        command.add_argument("--role", required=True, choices=sorted(ADAPTER_ROLES))
+        prompt_group = command.add_mutually_exclusive_group(required=True)
+        prompt_group.add_argument("--prompt")
+        prompt_group.add_argument("--prompt-file")
+        command.add_argument("--model")
+        command.add_argument("--allow-write", action="store_true")
+        command.add_argument("--json", action="store_true")
+
+    adapter_render = adapter_sub.add_parser(
+        "render", help="render the argv that an adapter would execute"
+    )
+    adapter_request_options(adapter_render)
+    adapter_render.set_defaults(func=cmd_adapter_render)
+
+    adapter_run = adapter_sub.add_parser("run", help="execute an adapter")
+    adapter_request_options(adapter_run)
+    adapter_run.add_argument("--timeout", type=int, default=1800)
+    adapter_run.set_defaults(func=cmd_adapter_run)
     return root
 
 

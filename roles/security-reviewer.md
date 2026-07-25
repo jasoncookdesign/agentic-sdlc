@@ -12,3 +12,5 @@ Conditions never auto-clear.
 The role is runtime-neutral: it may be performed by a specialized agent, a human reviewer, or an
 external security process.
 
+Runtime adapters enforce read-only execution for this role. A security verdict becomes lifecycle
+state only when the project’s policy process records or accepts it.
