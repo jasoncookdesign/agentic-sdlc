@@ -92,7 +92,7 @@ invalid context or invocation.
 
 ## Runtime adapters
 
-Version 2 can execute lifecycle roles through four adapters:
+Version 2 or later can execute lifecycle roles through four adapters:
 
 ```bash
 agentic-sdlc adapter list
@@ -147,10 +147,12 @@ environment.
 
 ## Project status
 
-Version 2 provides the generic lifecycle CLI plus executable Claude Code, Codex, Gemini, and
-local-command adapters. Projects initialized by version 1 remain valid; re-running `init` is not
-required. Add the optional `adapters` block described in
-[`docs/customization.md`](docs/customization.md) when model bindings or a local command are needed.
+Version 3 provides the generic lifecycle CLI plus executable Claude Code, Codex, Gemini, and
+local-command adapters (introduced in version 2), and sharpens the module execution loop's guidance
+on verifying a build environment's actual state rather than trusting a dependency's status field
+alone. Projects initialized by version 1 remain valid; re-running `init` is not required. Add the
+optional `adapters` block described in [`docs/customization.md`](docs/customization.md) when model
+bindings or a local command are needed.
 
 ## License
 

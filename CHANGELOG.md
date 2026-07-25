@@ -2,6 +2,18 @@
 
 All notable changes to Agentic SDLC are documented here.
 
+## 3.0.0
+
+- Sharpened the module execution loop's artifact-state check: a dependency's `status: complete` is
+  necessary but not sufficient, and the runbook now names the failure mode explicitly — an isolation
+  mechanism that prevents concurrent builders from interfering with each other is not the same thing
+  as one that provisions each new build environment from the point where prior dependency-complete
+  work actually landed. A build environment can be correctly isolated and still silently incomplete
+  if it forks from a fixed reference point instead of from wherever completed dependencies reside,
+  and a builder's own verification cannot catch this because it runs inside that same environment.
+- No schema, CLI, or role-contract changes. Existing lifecycle artifacts and configuration remain
+  fully compatible.
+
 ## 2.0.0
 
 - Added executable adapters for Claude Code, Codex, Gemini CLI, and configurable local agents.

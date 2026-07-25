@@ -109,7 +109,7 @@ review verdicts automatically.
 
 ## Upgrading a version 1 project
 
-Existing lifecycle artifacts remain compatible with version 2. The new adapter configuration is
+Existing lifecycle artifacts remain compatible with version 2 or later. The new adapter configuration is
 optional for Claude Code, Codex, and Gemini unless a project-level model binding is desired. To use
 the local adapter, add its command array under `adapters.providers.local` as shown above.
 

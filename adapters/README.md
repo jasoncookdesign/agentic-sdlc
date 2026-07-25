@@ -1,6 +1,6 @@
 # Runtime adapters
 
-Adapters connect lifecycle roles to installed agent runtimes. Version 2 provides executable
+Adapters connect lifecycle roles to installed agent runtimes. Version 2 or later provides executable
 adapters for Claude Code, Codex, Gemini CLI, and configurable local commands.
 
 Every adapter:

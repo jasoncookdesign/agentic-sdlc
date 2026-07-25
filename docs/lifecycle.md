@@ -81,7 +81,7 @@ The runtime, process manager, hosting platform, and source-control workflow are 
 ## Executing roles
 
 The lifecycle is usable as a human process, through another orchestration system, or directly
-through the version 2 runtime adapters. Adapter execution combines the selected role contract with
+through the version 2 or later runtime adapters. Adapter execution combines the selected role contract with
 the task prompt and the configured project and artifact roots.
 
 ```bash
