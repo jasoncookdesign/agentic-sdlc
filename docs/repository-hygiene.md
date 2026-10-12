@@ -16,7 +16,8 @@ These safeguards apply regardless of whether a repository is public or private:
   input when an agent consumes them.
 - Before running a third-party installer, scaffolder, or `init` command, check its documentation or
   source for writes outside the working directory. A write to any location loaded as agent
-  instructions or shell configuration is a stop, not an accepted side effect.
+  instructions or shell configuration is a stop, not an accepted side effect. If the documentation is silent or unclear,
+  treat the write targets as unknown: run it contained or ask first.
 
 Repository visibility, publication approval, secret scanners, branch rules, and commit mechanics are
 organizational policy hooks rather than framework requirements.

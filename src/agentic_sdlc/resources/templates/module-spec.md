@@ -27,7 +27,8 @@ tests.
 
 - [ ] Inherited contract tests pass unchanged.
 - [ ] Unit tests were observed failing before implementation and now pass.
-- [ ] Production-entry-point test passes.
+- [ ] Production-entry-point test drives the real composition and passes.
+- [ ] Real-browser test passes for each primary user route with dynamic behavior, if any.
 - [ ] Sibling-input sweep is recorded.
 - [ ] Error paths and edge cases are covered.
 - [ ] Documentation is current.

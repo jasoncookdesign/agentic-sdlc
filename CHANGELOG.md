@@ -4,15 +4,17 @@ All notable changes to Agentic SDLC are documented here.
 
 ## 3.1.0
 
-- Added engineering defaults drawn from production use: a real-composition entry-point test and a
-  shared-interface consumer sweep (contract-first delivery); the complexity ladder as an audit of
-  existing code (simplicity); third-party endpoint and authentication pre-flight before adapter
-  contracts and a real-browser test for dynamic UI (lifecycle and roles); README-for-a-stranger,
-  ignore-pattern review, and third-party installer pre-flight (repository hygiene); and service
-  re-verification after a runtime upgrade (deployment).
+- Contract-first delivery: a production-entry-point test that drives the real composition, and a
+  consumer sweep for shared interface and data-format changes.
+- Simplicity: the complexity ladder run in reverse as an audit of existing code.
+- Lifecycle, roles, and module template: third-party endpoint and authentication pre-flight before
+  adapter contracts, and a real-browser test for user routes with dynamic behavior.
+- Repository hygiene: README written for a reader with no context, ignore-pattern review, and
+  pre-flight for third-party installers and `init` commands.
+- Deployment: re-verify every service after a runtime upgrade.
 - Sharpened the architect, contract-author, and requirements-interviewer roles with checks for
   unrelated bound pairs, single-module invariant tests, redefined inherited types, mutually
-  unsatisfiable tests, fixture-encodable discriminators, guard verification, and explicit
+  unsatisfiable tests, hardcodable fixture answers, guard verification, and explicit
   assumptions.
 - No schema, CLI, or configuration changes. Existing lifecycle artifacts remain compatible.
 
