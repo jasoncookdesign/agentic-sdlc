@@ -17,7 +17,7 @@ Its governing rule is:
 - RED evidence plus a hostile no-op implementation that proves the suite is a real gate.
 - Contract tests immutable to the builder.
 - Independent review context with explicit `clear`, `clear-with-conditions`, or `block` verdicts.
-- A production-entry-point test for every module.
+- A production-entry-point test for every module that drives the real composition.
 - A rework meter that attributes defects to the phase that introduced them.
 - Optional security-review and release-approval policy hooks.
 
