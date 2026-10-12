@@ -22,3 +22,9 @@ sanitization—the burden reverses. Building requires justification because inco
 carry an open-ended correctness tail. Decide per responsibility, evaluate candidates on real inputs,
 and isolate the choice behind a replaceable interface.
 
+Run in reverse, the ladder audits existing code. Scope one module or directory at a time and look
+for hand-rolled code the runtime, platform, or an existing dependency already provides;
+abstractions with a single caller; configuration or extension points with no second consumer; and
+unused parameters or branches. Produce findings, not edits. Before removing code, pin its current
+behavior with a characterization test.
+

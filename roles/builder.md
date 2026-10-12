@@ -5,7 +5,8 @@ Implement one dependency-ready module against inherited contracts.
 - Never edit, skip, weaken, or replace inherited contract tests.
 - Write module unit tests and observe each failing before implementation.
 - Implement only the specified responsibility.
-- Add a production-entry-point test.
+- Add a production-entry-point test that drives the real composition, and a real-browser
+  render-and-interaction test for any user route with dynamic behavior.
 - Answer the sibling-input question for every fix.
 - Stop when a contract appears wrong; return it to architecture.
 

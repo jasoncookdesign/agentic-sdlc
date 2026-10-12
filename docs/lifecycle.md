@@ -24,6 +24,8 @@ Produce `ARCHITECTURE.md`, `INVARIANTS.md`, and one file in `modules/` per modul
 - State what each module owns and what it must not do.
 - Define concrete integration seams, units, ranges, error types, and trust boundaries.
 - Answer build-versus-buy per responsibility.
+- Before contracting an adapter to a third-party service, confirm the endpoint is reachable and its
+  authentication is understood and obtainable. A blocked dependency is a finding.
 - Give every cross-module invariant an executable owning test.
 
 Exit after independent design review. Security review is an optional risk-based policy hook.
@@ -49,7 +51,9 @@ Build one dependency-ready module at a time.
 - A runtime adapter may edit the project only when the invocation explicitly grants write access.
 - Each new unit test is observed failing before implementation.
 - Implementation is the minimum needed to pass.
-- Every module includes a production-entry-point test.
+- Every module includes a production-entry-point test that drives the real composition.
+- Browser-rendered UI with dynamic behavior, with or without a build framework, gets at least one
+  real-browser render-and-interaction test per primary user route.
 - Every fix includes a sibling-input sweep.
 - Contract defects return to Contract or Architect; the builder does not repair its own judge.
 

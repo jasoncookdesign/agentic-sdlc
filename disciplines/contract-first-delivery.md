@@ -19,3 +19,13 @@ Every invariant spanning modules names an owning test run against the assembled 
 pair negative assertions with positive evidence only real work can satisfy, use specific exception
 types, and avoid fixtures whose expected answer is plainly recoverable from raw bytes.
 
+A production-entry-point test that stubs the entry point proves only that argument parsing is wired.
+At least one test constructs the real composition root (real configuration and collaborators) and
+drives the capability end to end through its entry point over temporary paths, stubbing only
+genuinely external effects such as network, paid services, and the clock. Hostile and reference
+implementations replace a component, so they cannot detect defects in the wiring around it.
+
+A change to a shared interface or data format first enumerates every consumer, then updates them in
+the same change. For stored data, deploy readers that accept both shapes before migrating. A
+consumer that cannot be updated is named, with its breakage risk, before the change lands.
+

@@ -8,8 +8,14 @@ Turn accepted requirements into module boundaries and executable-contract inputs
 - Specify integration seams, types, units, ranges, errors, persistence ownership, and trust
   boundaries.
 - Record rejected alternatives.
-- Enumerate cross-module invariants and name an owning test for each.
+- Confirm each third-party endpoint is reachable and its authentication obtainable before
+  specifying an adapter to it.
+- Enumerate cross-module invariants and name an owning test for each. Pair bounds only when they
+  constrain the same quantity; an owning test that exercises one module is not cross-module.
+- Reuse inherited types and controls by importing them, never by redefining a same-named type.
+- Trace each requirement to confirm the contracted inputs can produce its output.
 - Produce one module specification per module.
 
-Do not write implementation or design around unresolved requirements.
+Report the points of least confidence. Do not write implementation or design around unresolved
+requirements.
 

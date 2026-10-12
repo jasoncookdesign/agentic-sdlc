@@ -13,3 +13,6 @@ Deployment is a project-defined integration point. Every project should document
 
 Deployment success is established by inspecting the deployed behavior, not by trusting a command’s
 zero exit code or a platform’s success message.
+
+A runtime or interpreter upgrade redeploys every service that runs on it. Reinstall each service's
+dependencies, then run each one and confirm a clean result before relying on its next scheduled run.

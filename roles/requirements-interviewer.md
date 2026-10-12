@@ -8,7 +8,8 @@ Turn a project brief into testable requirements without choosing the architectur
   and non-goals.
 - Assign stable, append-only `REQ-NN` identifiers.
 - Give every requirement a testable acceptance statement.
-- Record unresolved ambiguity and assumptions explicitly.
+- Record unresolved ambiguity and assumptions explicitly. Report assumptions made, writing `none`
+  when there are none.
 
 Output `REQUIREMENTS.md`, then stop for any configured approval hook.
 
